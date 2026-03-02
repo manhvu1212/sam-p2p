@@ -7,7 +7,7 @@ const SUIT_UI = {
     spades: { symbol: '♠', color: 'text-black' }
 };
 
-export default function Card({ card, className = "", onClick, style = {} }) {
+export default function Card({ card, className = "", onClick, style = {}, simple = false }) {
     if (!card) return null;
     const ui = SUIT_UI[card.suit] || { symbol: '?', color: 'text-gray-400' };
 
@@ -44,7 +44,8 @@ export default function Card({ card, className = "", onClick, style = {} }) {
             </div>
 
             {/* 3. GÓC DƯỚI BÊN PHẢI: Xoay ngược đối xứng */}
-            <div className={`flex flex-col items-center self-end leading-none rotate-180 mt-auto ${ui.color}`}>
+            {!simple && (
+                <div className={`flex flex-col items-center self-end leading-none rotate-180 mt-auto ${ui.color}`}>
                 <span className="text-[1.2rem] md:text-3xl font-black tracking-tight">
                     {card.rank}
                 </span>
@@ -52,6 +53,7 @@ export default function Card({ card, className = "", onClick, style = {} }) {
                     {ui.symbol}
                 </span>
             </div>
+            )}
         </div>
     );
 }

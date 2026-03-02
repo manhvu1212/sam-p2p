@@ -5,7 +5,10 @@ import { useGameStore } from '../store/useGameStore';
 import Card from './Card';
 
 export default function HandCards({ onPlayCards, onPassTurn }) {
-    const { isMyTurn, myCards, selectedCards, tableCards, toggleCardSelection } = useGameStore();
+    const { gameState, isReady, myCards, selectedCards, tableCards, toggleCardSelection } = useGameStore();
+    const isMyTurn = useGameStore(
+        (s) => s.currentTurnId === s.userId,
+    );
 
     // 1. Chuyển đổi ID bài đang chọn thành Object bài đầy đủ
     const selectedCardsObj = useMemo(() => {
@@ -79,25 +82,27 @@ export default function HandCards({ onPlayCards, onPassTurn }) {
                                 flexShrink: 0
                             }}
                             className={`
-                w-22 md:w-35 cursor-pointer
-                ${isSelected
+                                    w-22 md:w-35 cursor-pointer
+                                    ${isSelected
                                     ? '-translate-y-5 border-blue-500 ring-2 ring-blue-400'
                                     : 'hover:-translate-y-2'
                                 }
-              `}
+                            `}
                         />
                     );
                 })}
             </div>
 
             {/* 2. NÚT ĐÁNH BÀI: 
-        - Cách bài đúng 30px (mt-[30px]).
-        - Nhưng dùng sticky hoặc căn chỉnh để nó không lọt xuống quá sâu.
-        - Quan trọng: Nó nằm TRONG container này nên sẽ không bao giờ chạy mất.
-      */}
+                - Cách bài đúng 30px (mt-[30px]).
+                - Nhưng dùng sticky hoặc căn chỉnh để nó không lọt xuống quá sâu.
+                - Quan trọng: Nó nằm TRONG container này nên sẽ không bao giờ chạy mất.
+            */}
             {/* CỤM NÚT ĐIỀU KHIỂN */}
             <div className="mt-[30px] mb-[20px] z-[100] sticky bottom-[20px] flex gap-4 items-center justify-center">
+                { 
 
+                }
                 {/* NÚT BỎ LƯỢT - Chỉ hiện khi trên bàn đã có bài */}
                 {canPass && (
                     <button
@@ -119,13 +124,13 @@ export default function HandCards({ onPlayCards, onPassTurn }) {
                         disabled={!isPlayable}
                         onClick={() => onPlayCards(selectedCardsObj)}
                         className={`
-                relative px-14 py-3 rounded-full font-black text-lg uppercase tracking-widest
-                transition-all duration-300 border-2
-                ${isPlayable
-                                ? 'bg-slate-900 border-blue-400 text-blue-400 shadow-xl active:scale-95 cursor-pointer'
-                                : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed opacity-80'
-                            }
-            `}
+                                    relative px-14 py-3 rounded-full font-black text-lg uppercase tracking-widest
+                                    transition-all duration-300 border-2
+                                    ${isPlayable
+                                                    ? 'bg-slate-900 border-blue-400 text-blue-400 shadow-xl active:scale-95 cursor-pointer'
+                                                    : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed opacity-80'
+                                                }
+                                `}
                     >
                         ĐÁNH {isPlayable && `[${selectedCards.length}]`}
                     </button>

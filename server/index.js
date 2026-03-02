@@ -28,10 +28,11 @@ io.on('connection', (socket) => {
     socket.on('JOIN_ROOM', ({ roomId, user }) => {
         socket.join(roomId);
 
+        console.log(`👋 Người chơi ${user.id} đã vào phòng: ${roomId}`);
         // Ghi chép lại thông tin để lúc rớt mạng còn biết đường báo
         socketUserMap[socket.id] = { roomId, userId: user.id };
 
-        socket.to(roomId).emit('ROOM_MESSAGE', `${user.name} đã vào phòng!`);
+        socket.to(roomId).emit('PLAYER_JOINED', user);
     });
 
     // Lắng nghe sự kiện chủ động thoát phòng (Bấm nút Thoát)
@@ -43,10 +44,7 @@ io.on('connection', (socket) => {
         }
 
         // Báo cho những người còn lại biết ông này đã bỏ chạy (Tận dụng luôn logic rớt mạng ở Client)
-        socket.to(roomId).emit('GAME_UPDATE', {
-            actionType: 'PLAYER_DISCONNECTED',
-            payload: { userId }
-        });
+        socket.to(roomId).emit('PLAYER_LEFT', userId);
 
         console.log(`👋 Người chơi ${userId} đã chủ động thoát phòng: ${roomId}`);
     });
@@ -62,10 +60,7 @@ io.on('connection', (socket) => {
         const info = socketUserMap[socket.id];
         if (info) {
             // Hét lên cho cả phòng biết ông này vừa văng game
-            socket.to(info.roomId).emit('GAME_UPDATE', {
-                actionType: 'PLAYER_DISCONNECTED',
-                payload: { userId: info.userId }
-            });
+            socket.to(info.roomId).emit('PLAYER_LEFT', info.userId);
             delete socketUserMap[socket.id]; // Xóa khỏi sổ
         }
     });

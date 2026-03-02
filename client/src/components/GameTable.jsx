@@ -106,7 +106,7 @@ export default function GameTable({ onDealCards }) {
     };
 
     return (
-        <div className="relative w-full h-full max-w-5xl mx-auto flex items-center justify-center overflow-hidden">
+        <div className="relative w-full h-full max-w-5xl mx-auto flex items-center justify-center">
 
             {/* BÀN CHƠI HÌNH TRÒN */}
             {/* aspect-square để luôn giữ khung hình vuông, rounded-full để tạo hình tròn */}
@@ -125,9 +125,9 @@ export default function GameTable({ onDealCards }) {
                 const isOffline = player.status === 'OFFLINE';
 
                 return (
-                    <div key={player.id} style={positionStyle} className={`absolute flex flex-col items-center transition-all duration-500 ${isTurn ? 'scale-110 z-30' : 'scale-90 opacity-60 z-20'}`}>
-                        {player.isHost && (
-                            <span className="absolute -top-3 md:-top-4 bg-yellow-500 text-slate-900 text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-full z-40 shadow-md">Host</span>
+                    <div key={player.id} style={positionStyle} className={`absolute flex flex-col items-center transition-all duration-500 ${isTurn ? 'scale-110 z-30' : 'scale-90 z-20'}`}>
+                        {player.isReady && gameState === 'WAITING' && (
+                            <span className="absolute -top-3 md:-top-4 bg-yellow-500 text-slate-900 text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-full z-40 shadow-md">Ready</span>
                         )}
 
                         {/* Nếu Offline, hiện chữ đỏ cảnh báo đè lên Avatar */}
@@ -204,7 +204,7 @@ export default function GameTable({ onDealCards }) {
             </div>
 
             {/* NÚT CHIA BÀI */}
-            {isHost && gameState === 'WAITING' && (
+            {isHost && gameState === 'WAITING' && orderedPlayers.every(p => p.isReady) && (
                 <button onClick={onDealCards} className="absolute bottom-[20%] left-1/2 -translate-x-1/2 px-5 py-2.5 md:px-8 md:py-4 text-[12px] md:text-lg bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-black rounded-full shadow-2xl z-40 transition active:scale-95 uppercase tracking-wider">
                     CHIA BÀI
                 </button>

@@ -12,6 +12,11 @@ export const useGameStore = create(
             userId: null,
             name: '',
             avatar: '',
+            roomId: null,
+            isHost: false,
+            isReady: false,
+            myCards: [],          // Mảng bài mình đang cầm
+            selectedCards: [],
 
             initUser: (name, avatar) => {
                 const currentId = get().userId;
@@ -25,20 +30,25 @@ export const useGameStore = create(
             // ==========================================
             // 2. DỮ LIỆU PHÒNG & TRẠNG THÁI VÁN ĐẤU
             // ==========================================
-            roomId: null,
-            isHost: false,
-            gameState: 'WAITING', // WAITING (Chờ chia bài), PLAYING (Đang đánh), ENDING (Kết thúc)
-            players: [],
+            players: [],    // 
+            /*  { 
+                id: 1, 
+                name: '', 
+                avatar: '', 
+                status: "PLAYER" or "SPECTATOR" or "OFFLINE"
+                isHost: false, 
+                isReady: false,
+                isPassTurn: false
+                } */
 
             // Dữ liệu bài bạc
-            myCards: [],          // Mảng bài mình đang cầm
+            gameState: 'WAITING', // WAITING (Chờ chia bài), PLAYING (Đang đánh), FINISHED (Kết thúc)
             tableCards: [],       // Mảng bài đang ở giữa bàn
-            currentTurn: null,    // Đang là lượt của userId nào
-            selectedCards: [],
-            roomCardsMap: {}, // Host dùng cái này để theo dõi bài của mọi người
-            gameResult: null, // Lưu Bảng Xếp Hạng khi ván kết thúc
+            currentTurnId: null,    // Đang là lượt của userId nào
             winnerId: null,
-            
+            gameResult: null, // Lưu Bảng Xếp Hạng khi ván kết thúc
+            roomCardsMap: {}, // Host dùng cái này để theo dõi bài của mọi người
+
             // ==========================================
             // 3. CÁC HÀM CẬP NHẬT (ACTIONS)
             // ==========================================
@@ -46,6 +56,10 @@ export const useGameStore = create(
 
             // Hàm lưu bài của mình vào túi
             setMyCards: (cards) => set({ myCards: cards }),
+            removeCards: (ids) =>
+                set((state) => ({
+                    myCards: state.myCards.filter((c) => !ids.includes(c.id)),
+                })),
 
             toggleCardSelection: (cardId) => set((state) => {
                 const isSelected = state.selectedCards.includes(cardId);
@@ -61,19 +75,94 @@ export const useGameStore = create(
             // Hàm xóa sạch bài đang chọn (dùng khi vừa đánh bài ra xong)
             clearSelectedCards: () => set({ selectedCards: [] }),
 
-            // Hàm cập nhật trạng thái chung chung
-            updateGameState: (newState) => set((state) => ({ ...state, ...newState })),
+            hasPlayer: (id) => {
+                return get().players.some((p) => p.id === id);
+            },
+
+            addOrUpdatePlayer: (player) =>
+                set((state) => {
+                    const exists = state.players.some(
+                        (p) => p.id === player.id
+                    );
+
+                    if (exists) {
+                        return {
+                            players: state.players.map((p) =>
+                                p.id === player.id
+                                    ? { ...p, ...player }
+                                    : p
+                            ),
+                        };
+                    }
+
+                    return {
+                        players: [...state.players, player],
+                    };
+                }),
+
+            removePlayer: (id) =>
+                set((state) => ({
+                    players: state.players.filter((p) => p.id !== id),
+                })),
+            removePlayers: (ids) =>
+                set((state) => ({
+                    players: state.players.filter((p) => !ids.includes(p.id)),
+                })),
+
+            updatePlayer: (id, payload) =>
+                set((state) => ({
+                    players: state.players.map((p) => {
+                        if (p.id !== id) return p;
+
+                        // hỗ trợ cả object và function (realtime-safe)
+                        if (typeof payload === "function") {
+                            return payload(p);
+                        }
+
+                        return { ...p, ...payload };
+                    }),
+                })),
+
+            updatePlayers: (ids, payload) =>
+                set((state) => ({
+                    players: state.players.map((p) => {
+                        if (ids && ids.length > 0 && !ids.includes(p.id)) return p;
+
+                        // hỗ trợ cả object và function (realtime-safe)
+                        if (typeof payload === "function") {
+                            return payload(p);
+                        }
+
+                        return { ...p, ...payload };
+                    }),
+                })),
+
+            setPlayers: (players) => set({ players }),
+
+            addOrUpdateRoomCards: (userId, cards) =>
+                set((state) => ({
+                    roomCardsMap: {
+                        ...state.roomCardsMap,
+                        [userId]: cards,
+                    },
+                })),
 
             // Hàm Rời phòng / Xóa phiên chơi
             leaveRoom: () => set({
                 roomId: null,
                 isHost: false,
-                gameState: 'WAITING',
-                players: [],
+                isReady: false,
                 myCards: [],
                 selectedCards: [],
-                tableCards: [],
-                currentTurn: null
+
+                gameState: 'WAITING',
+                players: [],
+                tableCards: [],       // Mảng bài đang ở giữa bàn
+                currentTurnId: null,    // Đang là lượt của userId nào
+                isMyTurn: false,
+                winnerId: null,
+                gameResult: null, // Lưu Bảng Xếp Hạng khi ván kết thúc
+                roomCardsMap: {} // Host dùng cái này để theo dõi bài của mọi người
             })
         }),
         {
@@ -84,8 +173,10 @@ export const useGameStore = create(
                 avatar: state.avatar,
                 roomId: state.roomId,
                 isHost: state.isHost,
-                myCards: state.myCards,     // Lỡ F5 thì vẫn giữ lại bài trên tay
-                gameState: state.gameState
+                isReady: state.isReady,
+                myCards: state.myCards,
+                selectedCards: state.selectedCards,
+                players: state.players,
             }),
         }
     )

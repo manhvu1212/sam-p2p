@@ -109,7 +109,6 @@ const isRemainingThoi = (remainingCards) => {
  * Hàm so bài (Chặn bài) phiên bản Sâm Lốc
  */
 export const canPlay = (newCards, tableCards, playerHand) => {
-    return true
     const newCombo = getCombo(newCards);
     if (!newCombo) return false;
 
@@ -154,10 +153,9 @@ export const canPlay = (newCards, tableCards, playerHand) => {
  * Hàm tìm ID của người chơi tiếp theo (bỏ qua những người đã Pass)
  * @param {string} currentUserId - ID của người vừa đánh hoặc vừa bỏ lượt
  * @param {Array} players - Mảng danh sách người chơi trong phòng
- * @param {Array} passedIds - Mảng chứa ID những người đã bỏ lượt trong vòng này
  * @returns {string} - ID của người sẽ được cấp quyền đánh tiếp theo
  */
-export const getNextTurnId = (currentUserId, players, passedIds = []) => {
+export const getNextTurnId = (currentUserId, players) => {
     // Tìm vị trí của người hiện tại trong mảng
     const currentIndex = players.findIndex(p => p.id === currentUserId);
     if (currentIndex === -1) return null;
@@ -169,7 +167,7 @@ export const getNextTurnId = (currentUserId, players, passedIds = []) => {
         const nextPlayerId = players[nextIndex].id;
 
         // Nếu ID này không nằm trong danh sách sổ đen (đã bỏ lượt) -> Tới lượt ông này!
-        if (!passedIds.includes(nextPlayerId)) {
+        if (!nextPlayerId.isPassTurn) {
             return nextPlayerId;
         }
     }
@@ -182,6 +180,8 @@ export const getNextTurnId = (currentUserId, players, passedIds = []) => {
  * Tính toán kết quả ván đấu dựa trên bài mọi người lật lên
  */
 export const calculateGameResults = (winnerId, players, revealedCardsMap) => {
+    if (!winnerId || !players) return []
+    
     const results = [];
     let totalPenalty = 0;
 
